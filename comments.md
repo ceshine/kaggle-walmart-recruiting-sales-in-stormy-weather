@@ -1,42 +1,38 @@
+# Comments and analysis
+
 Thank you all people around this competition, I'm a newbie in data science and it was the first challenge for a non-playground competition, so I'm really surprised and glad to win.
 
 I'm not great at English, so wrote this method description in itemized style.
 
-Train model
+##Train model
 
 1. Exclude item/stores whose units are all zeros.
 
-2. For each item/stores,
-apply curve fitting by R ppr function (projection pursuit regression).
-y = log1p_units, x = days from 2012-01-01
+2. For each item/stores, apply curve fitting by R ppr function (projection pursuit regression). 
+   y = log1p_units, x = days from 2012-01-01
+   here, data on 2013-12-25 are excluded. (because units are almost all zeros)
 
-here, data on 2013-12-25 are excluded. (because units are almost all zeros)
+3. Train linear model with lasso using vowpal wabbit.  y = log1p_units - ppr_fitted
+   features :
+   - A : weekday, is_weekend, is_holiday, is_holiday_and_weekday, is_holiday_and_weekend
+   - B : item_nbr
+   - C : store_nbr
+   - D : date
+   - E : year, month, day
+   - F : is_BlackFriday-3days, -2days, -1day, is_BlackFriday, +1day, +2days, +3days
+   - G : weather features (is preciptotal > 0.2, depart > 8, depart <>
+   - interactions A*B A*C B*E C*E B*F C*F
 
-3. Train linear model with lasso using vowpal wabbit.
-y = log1p_units - ppr_fitted
-
-features :
-- A : weekday, is_weekend, is_holiday, is_holiday_and_weekday, is_holiday_and_weekend
-- B : item_nbr
-- C : store_nbr
-- D : date
-- E : year, month, day
-- F : is_BlackFriday-3days, -2days, -1day, is_BlackFriday, +1day, +2days, +3days
-- G : weather features (is preciptotal > 0.2, depart > 8, depart <>
-- interactions A*B A*C B*E C*E B*F C*F
-
-here, below are excluded:
-- on 2013-12-25
-- moving average(21 elements, centered) is zero.
+   here, below are excluded:
+   - on 2013-12-25
+   - moving average(21 elements, centered) is zero.
 
 4. Mark dates as "too much zeros" where both sides are many successive zeros.
-4-1. for dates whose units are not zero, calculate minimum of both side successive zeros (= min_side_zeros).
-4-2. for each item/stores,
-calculate maximum of min_side_zeros (= max_min_side_zeros), floor and ceiling by 1 and 9.
-4-3. for each item/stores,
-mark dates as "too much zeros" where both sides are successive zeros more than max_min_side_zeros.
+   1. for dates whose units are not zero, calculate minimum of both side successive zeros (= min_side_zeros).
+   2. for each item/stores, calculate maximum of min_side_zeros (= max_min_side_zeros), floor and ceiling by 1 and 9.
+   3. for each item/stores, mark dates as "too much zeros" where both sides are successive zeros more than max_min_side_zeros.
 
-Prediction on test set
+## Prediction on test set
 
 predicted_log1p = ppr_fitted(train-2) + linear model predicted(train-3)
 predicted = exp(predicted_log1p) - 1
@@ -47,7 +43,7 @@ here, below are predicted as zero.
 - moving average(21 elements, centered) is zero.
 - "too much zeros" (train-4)
 
-Comments
+## Comments
 
 The core idea is very simple like that:
 1. Create a baseline for each item/stores.
@@ -66,3 +62,6 @@ As for features:
    It's not natural, so I guess weather data came from different stations.
 
 Considering successive zeros was my final push, it slightly improved the score.
+
+## Source
+https://www.kaggle.com/c/walmart-recruiting-sales-in-stormy-weather/forums/t/14452/first-place-entry/82799#post82799
