@@ -1,4 +1,4 @@
-FROM ceshine/py3-datascience-toolbox:latest
+FROM ceshine/kaggle-env:py3
 
 # File Author / Maintainer
 MAINTAINER CeShine Lee "shuanck@gmail.com"
